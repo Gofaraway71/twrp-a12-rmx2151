@@ -3,6 +3,9 @@ import /tee.rc
 on fs
     setprop crypto.ready 1
     install_keyring
+    
+on boot
+    start init-device-sh    
 
 # Start Daemon (Registry directories should already be present)
 service mobicore /vendor/bin/mcDriverDaemon --P1 /mnt/vendor/persist/mcRegistry \
