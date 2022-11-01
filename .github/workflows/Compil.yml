@@ -1,0 +1,68 @@
+# This is taken from https://github.com/Area69Lab/Recovery-Builder-NoKernel
+# All credits goes to above repo
+
+name: Building recovery
+
+on:
+  workflow_dispatch:
+  watch:
+    types: [started]
+
+env:
+  MANIFEST: git://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git
+  MANIFEST_BRANCH: twrp-11
+  DEVICE: RMX2151
+  DT_LINK: https://github.com/Gofaraway71/twrp-a12-rmx2151
+  DT_PATH: device/realme/RMX2151
+  TARGET: recoveryimage
+  TZ: Asia/Kolkata
+
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+
+    - name: Initializing environment
+      run: |
+        
+        curl https://raw.githubusercontent.com/snjy4/TWRP_BUILD/main/cleanup.sh | bash
+        
+        git config --global user.email "abdou.bens34000@gmail.com"
+        sudo -E apt-get clean
+        sudo -E apt-get -qq update
+        sudo -E apt-get -qq install bc build-essential zip curl libstdc++6 git wget python gcc clang libssl-dev repo rsync flex bison aria2
+        sudo curl --create-dirs -L -o /usr/local/bin/repo -O -L https://storage.googleapis.com/git-repo-downloads/repo
+        sudo chmod a+rx /usr/local/bin/repo
+
+    - name: Sync recovery source and device tree
+      run: |
+        mkdir work
+        cd work
+        repo init -u $MANIFEST -b $MANIFEST_BRANCH --depth=1 --groups=all,-notdefault,-device,-darwin,-x86,-mips
+        repo sync -j4
+        repo sync
+        git clone $DT_LINK --depth=1 --single-branch $DT_PATH
+
+    - name: Build
+      run: |
+        cd work && export ALLOW_MISSING_DEPENDENCIES=true && . build/envsetup.sh && lunch twrp_$DEVICE-eng && mka $TARGET
+
+    - uses: actions/upload-artifact@v2
+      with:
+          name: recoveryzip
+          path: work/out/target/product/*/*.zip
+
+    - uses: actions/upload-artifact@v2
+      with:
+          name: recoveryimage
+          path: work/out/target/product/*/*.img
+          
+    - name: Upload recovery image
+      run: |
+        cd work/out/target/product/$DEVICE
+        curl -sL https://git.io/file-transfer | sh
+        ./transfer wet *.img
+        ./transfer wet *.zip
+        
