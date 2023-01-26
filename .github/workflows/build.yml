@@ -1,8 +1,4 @@
-# This is taken from https://github.com/Area69Lab/Recovery-Builder-NoKernel
-# All credits goes to above repo
-
-name: Building-recovery
-
+name: build
 on:
   workflow_dispatch:
     inputs:
@@ -48,7 +44,7 @@ on:
 jobs:
   build:
     if: github.event.repository.owner.id == github.event.sender.id
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     # You can use either of the ubuntu-18.04 or ubuntu-20.04 runner
     steps:
     - name: Display Run Parameters
@@ -65,11 +61,11 @@ jobs:
         echo "::endgroup::"
  
     # You might want to Checkout your repo first, but not mandatory
-    #- name: Check Out
-    #  uses: actions/checkout@v3
+    - name: Check Out
+      uses: actions/checkout@v3
     # Cleanup The Actions Workspace Using Custom Composite Run Actions
-    #- name: Cleanup
-    #  uses: rokibhasansagar/slimhub_actions@main
+    - name: Cleanup
+      uses: rokibhasansagar/slimhub_actions@main
       # That's it! Now use your normal steps
 
     - name: Prepare the environment
